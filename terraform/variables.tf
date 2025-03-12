@@ -1,16 +1,16 @@
 variable "project" {
   description = "Define an arbitrary project name in kebab-case (e.g.: cool-project-1436)"
-  default     = "district32"
+  default     = "densfordcivil"
 }
 
 variable "project_name" {
   description = "Project name that follows naming convention for Reports"
-  default     = "District32"
+  default     = "Densford Civil"
 }
 
 variable "profile" {
   description = "The aws-cli profile name to use for this operation"
-  default     = "d32-access-key"
+  default     = "densfordcivil-access-key"
 }
 
 variable "region" {
@@ -57,12 +57,12 @@ variable "ami_id" {
 variable "digitalocean_token" {
   description = "A DigitalOcean token to be used when provisioning subdomains. (reference: https://docs.digitalocean.com/reference/api/create-personal-access-token/)"
   sensitive   = true
-  default = "dop_v1_f31f8d894d4b1e471d8311f76bc6301eea3ecb34d22becdd1892334347284e09"
+  default = ""
 }
 
 variable "digitalocean_domain" {
   description = "The domain to use to append to the subdomain (inferred from project). Note that this domain must exist on the DigitalOcean account tied to the token"
-  default = "district32.bsdl.xyz"
+  default = "densfordcivil.bsdl.xyz"
 }
 
 variable "github_owner" {
