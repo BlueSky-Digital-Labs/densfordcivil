@@ -1,0 +1,79 @@
+# Local Development Docker-Compose File
+# This is the compose file that you should run if you want to run the stack on a local machine
+# Copy this file to the root of the project then follow the README.md documentation to run the stack
+# version: "3.9"
+services:
+  # Load Balancer / Reverse Proxy ======================================================================================
+  nginx:
+    container_name: ${PROJECT_NAME}_nginx
+    image: nginx:alpine
+    restart: on-failure
+    depends_on:
+      - backend
+      # - frontend
+    ports:
+      - "8080:80"
+    environment:
+      - NGINX_HOST=${NGINX_HOST}
+      - NGINX_PROJECT_NAME=${PROJECT_NAME}
+    volumes:
+      - ./modules/densfordcivil-backend/:/var/www/${PROJECT_NAME}/:ro
+      - ./nginx.conf:/etc/nginx/templates/default.conf.template
+
+
+  # The Shared Database ================================================================================================
+  database:
+    container_name: ${PROJECT_NAME}_db
+    image: mysql:latest
+    restart: on-failure
+    environment:
+      MYSQL_DATABASE: ${PROJECT_NAME}
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    ports:
+      - "13306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # The Primary Backend Service (Laravel) ==============================================================================
+  backend:
+    container_name: ${PROJECT_NAME}_backend
+    restart: on-failure
+    depends_on:
+      - database
+    working_dir: /var/www/${PROJECT_NAME}
+    build:
+      context: .
+      dockerfile: ./modules/densfordcivil-backend/docker/shared/Dockerfile
+      args:
+        user: ${PROJECT_NAME}
+        uid: 1000
+        project: ${PROJECT_NAME}
+    env_file:
+      - ./modules/densfordcivil-backend/.env
+    volumes:
+      - ./modules/densfordcivil-backend/:/var/www/${PROJECT_NAME}/:rw
+
+  # The Primary Frontend Service (NextJS) ===============================================================================
+  frontend:
+    container_name: ${PROJECT_NAME}_frontend
+    restart: on-failure
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    build:
+      context: .
+      dockerfile: ./modules/densfordcivil-frontend/docker/Dockerfile
+      args:
+        project: ./modules/densfordcivil-frontend
+    env_file:
+      - ./modules/densfordcivil-frontend/.env
+    volumes:
+      - ./modules/densfordcivil-frontend:/app:rw
+
+# networks:
+#   default:
+#     # Use a custom driver
+#     name: ${PROJECT_NAME}_network
+#     #  external: true
+volumes:
+  db_data:

@@ -1,0 +1,96 @@
+# Usage instructions
+#
+# Copy this file with a filename similar to `environments.$ENVIRONMENT_NAME.tf`. So if you
+# are building a `development` (`dev`), name it `environments.development.tf`.
+#
+# Replace the following variables with the value of your choice:
+# - $ENVIRONMENT_NAME = The name of your environment (e.g.: development, uat, production).
+#     Note the distinction between "name" and "short name".
+#
+# - $ENVIRONMENT_SHORT_NAME = The short-name of your environment (e.g.: dev, uat, prod).
+#     Recommended to be less than five (5) characters
+#
+# - $BUILD_BRANCH = Your environment will target a specific branch to build to. Set this
+#     value to that
+#
+# - $IMAGE_TAG = When your application is built, it needs a Docker Image Tag. Set this
+#     value as it may be used by your pipeline
+#
+# - $FRONTEND_IMAGE_NAME, $BACKEND_IMAGE_NAME = Ideally "frontend" and "backend". This
+#     precedes $IMAGE_TAG and when composed looks like: $*_IMAGE_NAME:$IMAGE_TAG
+#
+# If you have other repositories or environment variables to add into the defined GitHub
+# resources in the module, simply refer to `github_action_build_map`.
+#
+# Remove this heading comment block, save the file and apply in Terraform.
+
+module "$ENVIRONMENT_NAME" {
+  depends_on = [aws_internet_gateway.this]
+  source     = "./modules/environment"
+
+  az = local.default_availability_zone
+
+  env_name       = "$ENVIRONMENT_NAME"
+  env_short_name = "$ENVIRONMENT_SHORT_NAME"
+
+  subnet_id          = aws_subnet.a.id
+  security_group_ids = [aws_security_group.base.id]
+
+  ami_id                    = coalesce(var.ami_id, data.aws_ami.ubuntu.id)
+  iam_instance_profile_name = aws_iam_instance_profile.ec2-app-service.name
+
+  keypair_name = aws_key_pair.primary-ssh-key.key_name
+
+  digitalocean_domain_id = data.digitalocean_domain.this.id
+
+  admin_username  = "ubuntu"
+  admin_usergroup = "ubuntu"
+
+  certbot_email = var.primary_email_contact
+
+  project = var.project
+  project_name = var.project_name
+
+  database = {
+    has_database           = true
+    subnet_group_name      = aws_db_subnet_group.this.name
+    vpc_security_group_ids = [aws_security_group.base.id]
+  }
+
+  github_action_build_map = {
+    (local.github_repository_names.frontend) = [
+      {
+        name  = "BUILD_BRANCH"
+        value = "$BUILD_BRANCH"
+      },
+      {
+        name  = "IMAGE_TAG"
+        value = "$IMAGE_TAG"
+      },
+      {
+        name  = "IMAGE_NAME"
+        value = "$FRONTEND_IMAGE_NAME"
+      },
+    ],
+    (local.github_repository_names.backend) = [
+      {
+        name  = "BUILD_BRANCH"
+        value = "$BUILD_BRANCH"
+      },
+      {
+        name  = "IMAGE_TAG"
+        value = "$IMAGE_TAG"
+      },
+      {
+        name  = "IMAGE_NAME"
+        value = "$BACKEND_IMAGE_NAME"
+      },
+    ]
+  }
+}
+
+output "$ENVIRONMENT_NAME" {
+  value = module.$ENVIRONMENT_NAME
+
+  sensitive = true
+}

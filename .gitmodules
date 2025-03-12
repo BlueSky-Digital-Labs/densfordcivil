@@ -1,0 +1,8 @@
+[submodule "modules/densfordcivil-frontend"]
+	path = modules/densfordcivil-frontend
+	url = git@github.com:BlueSky-Digital-Labs/densfordcivil-frontend.git
+	ignore = dirty
+[submodule "modules/densfordcivil-backend"]
+	path = modules/densfordcivil-backend
+	url = git@github.com:BlueSky-Digital-Labs/densfordcivil-backend.git
+	ignore = dirty
