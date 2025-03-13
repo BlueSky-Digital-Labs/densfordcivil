@@ -62,7 +62,7 @@ services:
       - "3000:3000"
     build:
       context: .
-      dockerfile: ./modules/densfordcivil-frontend/docker/Dockerfile
+      dockerfile: ./modules/densfordcivil-frontend/docker/shared/Dockerfile
       args:
         project: ./modules/densfordcivil-frontend
     env_file:
